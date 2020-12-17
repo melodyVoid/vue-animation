@@ -2,18 +2,15 @@
   <div>
     <div class="top">
       <button @click="handleAdd">新增</button>
+      <button @click="handleShuffle">乱序</button>
       <button @click="handleReset">重置</button>
     </div>
     <div class="wrapper">
       <div
         class="item"
-        v-for="(item, index) of cardList"
-        :key="index"
-        :ref="
-          el => {
-            if (el) cardsRef[index] = el
-          }
-        "
+        v-for="item of cardList"
+        :key="item"
+        :ref="el => cardsRef.set(item, el)"
       >
         {{ item }}
       </div>
@@ -28,12 +25,28 @@ const generateArray = num =>
     .map((item, index) => index + 1)
     .reverse()
 
+function shuffle(arr) {
+  var result = [],
+    random
+  while (arr.length > 0) {
+    random = Math.floor(Math.random() * arr.length)
+    result.push(arr[random])
+    arr.splice(random, 1)
+  }
+  return result
+}
+
 const cardList = ref(generateArray(3))
+const count = ref(3)
+
 /**
  * 新增卡片
  */
 const handleAdd = async () => {
-  cardList.value.unshift(cardList.value.length + 1)
+  console.log(count.value, cardList.value.length)
+  if (count.value === cardList.value.length) {
+    cardList.value.unshift(cardList.value.length + 1)
+  }
 }
 
 /**
@@ -42,10 +55,16 @@ const handleAdd = async () => {
 const handleReset = () => (cardList.value = generateArray(3))
 
 /**
+ * 乱序
+ */
+const handleShuffle = () => {
+  cardList.value = shuffle(cardList.value)
+}
+/**
  * FLIP 动画
  */
 // 记录 DOM 节点
-const cardsRef = ref([])
+const cardsRef = ref(new Map())
 
 const getRect = element => {
   const { left, top } = element.getBoundingClientRect()
@@ -53,23 +72,29 @@ const getRect = element => {
 }
 
 const createRectMap = elements => {
-  return elements.reduce((rectMap, cardDOM) => {
-    rectMap.set(cardDOM.innerText, { ...getRect(cardDOM), dom: cardDOM })
-    return rectMap
-  }, new Map())
+  console.log(elements, 'ele')
+  const rectMap = new Map()
+  elements.forEach((cardDOM, key) => {
+    if (cardDOM !== null) {
+      rectMap.set(key, { ...getRect(cardDOM), dom: cardDOM })
+    }
+  })
+  return rectMap
 }
 
 watch(
   cardList,
-  async () => {
+  async newCardList => {
     // // 旧的卡片位置信息
     const oldCardRectMap = createRectMap(cardsRef.value)
+    // debugger
     console.log(oldCardRectMap, 'old')
     await nextTick()
     // 这里能拿到更新后的 DOM 结构，我们也就可以拿到最新的 DOM 位置
     const newCardRectMap = createRectMap(cardsRef.value)
     console.log(newCardRectMap, 'new')
-    newCardRectMap.forEach((rect, key) => {
+    count.value = 0
+    newCardRectMap.forEach(async (rect, key) => {
       const oldRect = oldCardRectMap.get(key)
       const invert = {
         left: oldRect ? oldRect.left - rect.left : 0,
@@ -90,11 +115,14 @@ watch(
       ]
 
       const options = {
-        duration: 500,
+        duration: 300,
         ease: 'ease-in-out',
       }
 
-      rect.dom.animate(keyframes, options)
+      const animation = rect.dom.animate(keyframes, options)
+      await animation.finished
+
+      count.value += 1
     })
   },
   { deep: true }
