@@ -19,7 +19,7 @@ const routes = [
   {
     path: '/flip',
     name: 'Flip',
-    component: () => import(/* webpackChunkName: "flip" */ '@/views/Flip.vue'),
+    component: () => import(/* webpackChunkName: "flip" */ '@/views/Flip/index.vue'),
   },
 ]
 
