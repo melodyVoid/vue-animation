@@ -26,25 +26,24 @@ const generateArray = num =>
     .reverse()
 
 function shuffle(arr) {
-  var result = [],
-    random
+  const result = []
+  let randomIndex
   while (arr.length > 0) {
-    random = Math.floor(Math.random() * arr.length)
-    result.push(arr[random])
-    arr.splice(random, 1)
+    randomIndex = Math.floor(Math.random() * arr.length)
+    result.push(arr[randomIndex])
+    arr.splice(randomIndex, 1)
   }
   return result
 }
 
 const cardList = ref(generateArray(3))
-const count = ref(3)
+let count = cardList.value.length
 
 /**
  * 新增卡片
  */
 const handleAdd = async () => {
-  console.log(count.value, cardList.value.length)
-  if (count.value === cardList.value.length) {
+  if (count === cardList.value.length) {
     cardList.value.unshift(cardList.value.length + 1)
   }
 }
@@ -93,7 +92,8 @@ watch(
     // 这里能拿到更新后的 DOM 结构，我们也就可以拿到最新的 DOM 位置
     const newCardRectMap = createRectMap(cardsRef.value)
     console.log(newCardRectMap, 'new')
-    count.value = 0
+    // 每次开始循环前先重置 count
+    count = 0
     newCardRectMap.forEach(async (rect, key) => {
       const oldRect = oldCardRectMap.get(key)
       const invert = {
@@ -116,13 +116,13 @@ watch(
 
       const options = {
         duration: 300,
-        ease: 'ease-in-out',
+        ease: 'ease-in',
       }
 
       const animation = rect.dom.animate(keyframes, options)
       await animation.finished
 
-      count.value += 1
+      count++
     })
   },
   { deep: true }
