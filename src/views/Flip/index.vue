@@ -19,22 +19,12 @@
 </template>
 <script setup>
 import { nextTick, reactive, ref, watch } from 'vue'
+import { shuffle } from '@/utils'
 const generateArray = num =>
   Array(num)
     .fill()
     .map((item, index) => index + 1)
     .reverse()
-
-function shuffle(arr) {
-  const result = []
-  let randomIndex
-  while (arr.length > 0) {
-    randomIndex = Math.floor(Math.random() * arr.length)
-    result.push(arr[randomIndex])
-    arr.splice(randomIndex, 1)
-  }
-  return result
-}
 
 const cardList = ref(generateArray(3))
 let count = cardList.value.length
